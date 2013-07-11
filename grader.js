@@ -64,6 +64,18 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
+var getFileToCheck = function(url, file){
+    if(url == null){
+	return file;
+    }
+    var resultFile= rest.get(url).on('complete', function(result, response){
+    if(result instanceof Error){
+        console.error('Error: ' + util.format(response.message));
+    }else{
+        fs.writeFileSync(resultFile, result);
+    }
+};
+
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
@@ -72,17 +84,6 @@ if(require.main == module) {
 	.parse(process.argv);
 
     var file = getFileToCheck(program.url, program.file);
-    if(program.url != null){
-	file = rest.get(program.url).on('complete', function(result, response){
-	    if(result instanceof Error){
-		console.error('Error: ' + util.format(response.message));
-	    }else{
-		fs.writeFileSync(file, result);
-            }	
-	});    
-    }else{
-	file = program.file;
-    }
     var checkJson = checkHtmlFile(file, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
